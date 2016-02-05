@@ -54,7 +54,29 @@
                         appendClass = 'html';
                         break;
                     case 'richhtml':
-                        {{ source_id }}_rich_instance = {{ ckeditor_widget(form.children[source_field].vars.id, ckeditor_configuration) }};
+                        var CKEDITOR_BASEPATH = "{{ ckeditor_base_path(ckeditor_basepath) }}";
+
+                        {% for plugin_name, plugin in ckeditor_plugins %}
+                            {{ ckeditor_plugin(plugin_name, plugin) }}
+                        {% endfor %}
+
+                        {% for style_name, style in ckeditor_styles %}
+                            {{ ckeditor_styles_set(style_name, style) }}
+                        {% endfor %}
+
+                        {% for template_name, template in ckeditor_templates %}
+                            {{ ckeditor_template(template_name, template) }}
+                        {% endfor %}
+
+                        {{ source_id }}_rich_instance = {{
+                            ckeditor_widget(form.children[source_field].vars.id, ckeditor_configuration, {
+                                    auto_inline: ckeditor_auto_inline,
+                                    inline: ckeditor_inline,
+                                    input_sync: ckeditor_input_sync
+                                }
+                            )
+                        }};
+                        break;
 
                 }
 

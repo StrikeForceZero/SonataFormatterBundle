@@ -11,7 +11,7 @@
 
 namespace Sonata\FormatterBundle\Form\Type;
 
-use Ivory\CKEditorBundle\Model\ConfigManagerInterface;
+use Ivory\CKEditorBundle\Form\Type\CKEditorType;
 use Sonata\FormatterBundle\Form\EventListener\FormatterListener;
 use Sonata\FormatterBundle\Formatter\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -36,22 +36,23 @@ class FormatterType extends AbstractType
     protected $translator;
 
     /**
-     * @var ConfigManagerInterface
+     * @var CKEditorType
      */
-    protected $configManager;
+    protected $CKEditorType;
+
 
     /**
      * Constructor.
      *
-     * @param Pool                   $pool          A Formatter Pool service
-     * @param TranslatorInterface    $translator    A Symfony Translator service
-     * @param ConfigManagerInterface $configManager An Ivory CKEditor bundle configuration manager
+     * @param Pool $pool A Formatter Pool service
+     * @param TranslatorInterface $translator A Symfony Translator service
+     * @param CKEditorType $CKEditorType
      */
-    public function __construct(Pool $pool, TranslatorInterface $translator, ConfigManagerInterface $configManager)
+    public function __construct(Pool $pool, TranslatorInterface $translator, CKEditorType $CKEditorType)
     {
         $this->pool = $pool;
         $this->translator = $translator;
-        $this->configManager = $configManager;
+        $this->CKEditorType = $CKEditorType;
     }
 
     /**
@@ -134,10 +135,10 @@ class FormatterType extends AbstractType
 
         $view->vars['format_field_options'] = $options['format_field_options'];
 
-        $defaultConfig = $this->configManager->getDefaultConfig();
+        $defaultConfig = $this->CKEditorType->getConfigManager()->getDefaultConfig();
 
-        if ($this->configManager->hasConfig($defaultConfig)) {
-            $ckeditorConfiguration = $this->configManager->getConfig($defaultConfig);
+        if ($this->CKEditorType->getConfigManager()->hasConfig($defaultConfig)) {
+            $ckeditorConfiguration = $this->CKEditorType->getConfigManager()->getConfig($defaultConfig);
         } else {
             $ckeditorConfiguration = array();
         }
@@ -147,12 +148,18 @@ class FormatterType extends AbstractType
         }
 
         if ($options['ckeditor_context']) {
-            $contextConfig = $this->configManager->getConfig($options['ckeditor_context']);
+            $contextConfig = $this->CKEditorType->getConfigManager()->getConfig($options['ckeditor_context']);
             $ckeditorConfiguration = array_merge($ckeditorConfiguration, $contextConfig);
         }
 
         $view->vars['ckeditor_configuration'] = $ckeditorConfiguration;
         $view->vars['ckeditor_basepath'] = $options['ckeditor_basepath'];
+        $view->vars['ckeditor_plugins'] = $options['ckeditor_plugins'];
+        $view->vars['ckeditor_styles'] = $options['ckeditor_styles'];
+        $view->vars['ckeditor_templates'] = $options['ckeditor_templates'];
+        $view->vars['ckeditor_auto_inline'] = $options['ckeditor_auto_inline'];
+        $view->vars['ckeditor_inline'] = $options['ckeditor_inline'];
+        $view->vars['ckeditor_input_sync'] = $options['ckeditor_input_sync'];
 
         $view->vars['source_id'] = str_replace($view->vars['name'], $view->vars['source_field'], $view->vars['id']);
     }
@@ -183,8 +190,14 @@ class FormatterType extends AbstractType
                  '-', 'Image', 'Link', 'Unlink', 'Table', ),
                  array('Maximize', 'Source'),
             ),
-            'ckeditor_basepath'         => 'bundles/sonataformatter/vendor/ckeditor',
+            'ckeditor_basepath'         => $this->CKEditorType->getBasePath(),
             'ckeditor_context'          => null,
+            'ckeditor_plugins'          => $this->CKEditorType->getPluginManager()->getPlugins(),
+            'ckeditor_styles'           => $this->CKEditorType->getStylesSetManager()->getStylesSets(),
+            'ckeditor_templates'        => $this->CKEditorType->getTemplateManager()->getTemplates(),
+            'ckeditor_auto_inline'      => $this->CKEditorType->isAutoInline(),
+            'ckeditor_inline'           => $this->CKEditorType->isInline(),
+            'ckeditor_input_sync'       => $this->CKEditorType->isInputSync(),
             'format_field_options'      => array(
                 'choices'               => $formatters,
             ),

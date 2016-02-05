@@ -11,7 +11,7 @@
 
 namespace Sonata\FormatterBundle\Form\Type;
 
-use Ivory\CKEditorBundle\Model\ConfigManagerInterface;
+use Ivory\CKEditorBundle\Form\Type\CKEditorType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
@@ -20,18 +20,19 @@ use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 class SimpleFormatterType extends AbstractType
 {
     /**
-     * @var ConfigManagerInterface
+     * @var CKEditorType
      */
-    protected $configManager;
+    protected $CKEditorType;
 
     /**
      * Constructor.
      *
-     * @param ConfigManagerInterface $configManager An Ivory CKEditor bundle configuration manager
+     * @param CKEditorType $CKEditorType
+     * @internal param ConfigManagerInterface $configManager An Ivory CKEditor bundle configuration manager
      */
-    public function __construct(ConfigManagerInterface $configManager)
+    public function __construct(CKEditorType $CKEditorType)
     {
-        $this->configManager = $configManager;
+        $this->CKEditorType = $CKEditorType;
     }
 
     /**
@@ -44,12 +45,17 @@ class SimpleFormatterType extends AbstractType
         );
 
         if ($options['ckeditor_context']) {
-            $contextConfig = $this->configManager->getConfig($options['ckeditor_context']);
+            $contextConfig = $this->CKEditorType->getConfigManager()->getConfig($options['ckeditor_context']);
             $ckeditorConfiguration = array_merge($ckeditorConfiguration, $contextConfig);
         }
 
         $view->vars['ckeditor_configuration'] = $ckeditorConfiguration;
-        $view->vars['ckeditor_basepath'] = $options['ckeditor_basepath'];
+        $view->vars['ckeditor_plugins'] = $options['ckeditor_plugins'];
+        $view->vars['ckeditor_styles'] = $options['ckeditor_styles'];
+        $view->vars['ckeditor_templates'] = $options['ckeditor_templates'];
+        $view->vars['ckeditor_auto_inline'] = $options['ckeditor_auto_inline'];
+        $view->vars['ckeditor_inline'] = $options['ckeditor_inline'];
+        $view->vars['ckeditor_input_sync'] = $options['ckeditor_input_sync'];
 
         $view->vars['format'] = $options['format'];
     }
@@ -69,8 +75,14 @@ class SimpleFormatterType extends AbstractType
                  '-', 'Image', 'Link', 'Unlink', 'Table', ),
                  array('Maximize', 'Source'),
             ),
-            'ckeditor_basepath'   => 'bundles/sonataformatter/vendor/ckeditor',
-            'ckeditor_context'    => null,
+            'ckeditor_basepath'         => $this->CKEditorType->getBasePath(),
+            'ckeditor_context'          => null,
+            'ckeditor_plugins'          => $this->CKEditorType->getPluginManager()->getPlugins(),
+            'ckeditor_styles'           => $this->CKEditorType->getStylesSetManager()->getStylesSets(),
+            'ckeditor_templates'        => $this->CKEditorType->getTemplateManager()->getTemplates(),
+            'ckeditor_auto_inline'      => $this->CKEditorType->isAutoInline(),
+            'ckeditor_inline'           => $this->CKEditorType->isInline(),
+            'ckeditor_input_sync'       => $this->CKEditorType->isInputSync(),
             'format_options'      => array(
                 'attr' => array(
                     'class' => 'span10 col-sm-10 col-md-10',
